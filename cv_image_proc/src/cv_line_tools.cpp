@@ -26,59 +26,16 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#ifndef CV_IMAGE_WARP_H___
-#define CV_IMAGE_WARP_H___
 
-#include <opencv/cv.h>
-#include <opencv2/imgproc/imgproc.hpp>
+#include <cv_image_proc/cv_line_tools.h>
 
-#include <sensor_msgs/Image.h>
-#include <sensor_msgs/CameraInfo.h>
 
-#include <tf/tf.h>
-
-#include <cv_bridge/cv_bridge.h>
-
-#include <Eigen/Core>
 
 namespace cv_image_warp{
 
-enum corners {BOTTOM_LEFT, UPPER_LEFT, UPPER_RIGHT, BOTTOM_RIGHT};
 
 
-/**
- * @brief getSampleRectangleObjectPoints is a convenience function
- * for specifying a rectangle on the yz plane.
- * @param rectangle_size Directly used for the rectangle corners
- * @return vector of points
- */
-std::vector<Eigen::Vector3d> getSampleRectangleObjectPoints(double size);
 
-void getPerspectiveTransformedImage(const std::vector<cv::Point2d> points_image_coords_,
-                                    const cv::Mat& source_img,
-                                    cv::Mat& target_img,
-                                    const cv::Size& target_size_pixels);
-
-class WarpProvider{
-public:
-
-  WarpProvider(boost::shared_ptr<tf::Transformer> transformer_in,
-               const std::string target_frame_in = std::string("map"));
-
-  bool getWarpedImage(const sensor_msgs::ImageConstPtr& image,
-                      const sensor_msgs::CameraInfoConstPtr& cam_info,
-                      const geometry_msgs::Pose& pose_target_frame,
-                      const std::vector<Eigen::Vector3d>& points_object_frame,
-                      const cv::Size& target_size_pixels,
-                      cv_bridge::CvImagePtr cv_ptr);
-
-protected:
-  boost::shared_ptr<tf::Transformer> transformer_;
-  std::string target_frame_;
-
-};
 
 
 }
-
-#endif

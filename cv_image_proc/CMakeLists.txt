@@ -36,7 +36,11 @@ add_library(cv_image_warp
 
 target_link_libraries(cv_image_warp ${catkin_LIBRARIES})
 
+add_library(cv_line_tools
+  src/cv_line_tools.cpp
+  )
 
+target_link_libraries(cv_line_tools ${catkin_LIBRARIES})
 
 ## Declare a cpp library
 # add_library(cv_image_proc

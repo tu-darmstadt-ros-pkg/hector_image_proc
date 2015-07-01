@@ -1,5 +1,5 @@
 //=================================================================================================
-// Copyright (c) 2014, Stefan Kohlbrecher, TU Darmstadt
+// Copyright (c) 2015, Stefan Kohlbrecher, TU Darmstadt
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without
@@ -118,9 +118,6 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
     ROS_ERROR("Lookup Transform failed: %s",ex.what());
     return false;
   }
-
-  ROS_INFO("After tf");
-
 
   tf::Pose object_pose_camera_tf = trans_to_camera_frame * object_pose_world_tf;
 
