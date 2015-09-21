@@ -89,7 +89,7 @@ WarpProvider::WarpProvider(boost::shared_ptr<tf::Transformer> transformer_in,
 
 bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
                                   const sensor_msgs::CameraInfoConstPtr& cam_info,
-                                  const geometry_msgs::Pose& pose_target_frame,
+                                  const geometry_msgs::Pose& pose_object_frame,
                                   const std::vector<Eigen::Vector3d>& points_object_frame,
                                   const cv::Size& target_size_pixels,
                                   cv_bridge::CvImagePtr out_msg)
@@ -102,13 +102,13 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
   }
 
   tf::Pose object_pose_world_tf;
-  tf::poseMsgToTF(pose_target_frame, object_pose_world_tf);
+  tf::poseMsgToTF(pose_object_frame, object_pose_world_tf);
 
   //ROS_INFO_STREAM("\n" << object_pose_world << "\n");
 
   tf::StampedTransform trans_to_camera_frame;
   try{
-    transformer_->lookupTransform(image->header.frame_id, "world",
+    transformer_->lookupTransform(image->header.frame_id, target_frame_,
                                   ros::Time(0), trans_to_camera_frame);
     //listener->lookupTransform("arm_stereo_left_camera_optical_frame", "world",
     //                          ros::Time(0), trans_to_camera_frame);
@@ -123,9 +123,6 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
 
   image_geometry::PinholeCameraModel cam_model;
 
-  //sensor_msgs::CameraInfo cam_info_fixed = *latest_camera_info_;
-  //cam_info_fixed.distortion_model = "plumb_bob";
-  //cam_model.fromCameraInfo(cam_info_fixed);
   cam_model.fromCameraInfo(*cam_info);
 
   cv::Point2d object_camera_pixels = cam_model.project3dToPixel(
@@ -164,8 +161,8 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
   Eigen::Affine3d transform_camera_t_world;
   tf::transformTFToEigen(trans_to_camera_frame, transform_camera_t_world);
 
-  Eigen::Affine3d transform_object_t_world;
-  tf::poseMsgToEigen(pose_target_frame, transform_object_t_world);
+  Eigen::Affine3d transform_world_t_object;
+  tf::poseMsgToEigen(pose_object_frame, transform_world_t_object);
 
   //geometry_msgs::PolygonStamped plane_poly;
   //plane_poly.header = latest_img_->header;
@@ -180,7 +177,7 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
   {
 
     Eigen::Vector3d point_cam = transform_camera_t_world *
-        transform_object_t_world *
+        transform_world_t_object *
         points_object_frame[i];
 
     points_image_coords_[i] = cam_model.project3dToPixel(

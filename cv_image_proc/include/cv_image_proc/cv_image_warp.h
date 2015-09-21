@@ -54,6 +54,16 @@ enum corners {BOTTOM_LEFT, UPPER_LEFT, UPPER_RIGHT, BOTTOM_RIGHT};
  */
 std::vector<Eigen::Vector3d> getSampleRectangleObjectPoints(double size);
 
+/**
+ * @brief getPerspectiveTransformedImage generates a perspective
+ * transformed image target_img for the four corner points provided
+ * @param points_image_coords_ The four corner points for the warped
+ * cutout
+ * @param source_img The source image
+ * @param target_img The target image
+ * @param target_size_pixels The size in pixels for the target image
+ * @return vector of points
+ */
 void getPerspectiveTransformedImage(const std::vector<cv::Point2d> points_image_coords_,
                                     const cv::Mat& source_img,
                                     cv::Mat& target_img,
@@ -65,9 +75,21 @@ public:
   WarpProvider(boost::shared_ptr<tf::Transformer> transformer_in,
                const std::string target_frame_in = std::string("map"));
 
+  /**
+   * @brief getWarpedImage generates a perspective warped image for a
+   * ROI in the provided image and for the provided object data
+   * @param image The image to use
+   * @param cam_info The camera info for the input image
+   * @param pose_object_frame The pose of the object of interest
+   * @param points_object_frame Four points given in the object's
+   * frame of reference that are the corner points of the image
+   * that is provided
+   * @param target_size_pixels The size in pixels for the target image
+   * @return Indication if operation was successful
+   */
   bool getWarpedImage(const sensor_msgs::ImageConstPtr& image,
                       const sensor_msgs::CameraInfoConstPtr& cam_info,
-                      const geometry_msgs::Pose& pose_target_frame,
+                      const geometry_msgs::Pose& pose_object_frame,
                       const std::vector<Eigen::Vector3d>& points_object_frame,
                       const cv::Size& target_size_pixels,
                       cv_bridge::CvImagePtr cv_ptr);
