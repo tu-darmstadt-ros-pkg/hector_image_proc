@@ -146,7 +146,11 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
     //if (sensor_msgs::image_encodings::isColor(latest_img_->encoding))
     //  cv_ptr = cv_bridge::toCvShare(latest_img_, sensor_msgs::image_encodings::BGR8);
     //else
-    cv_ptr = cv_bridge::toCvShare(image, sensor_msgs::image_encodings::MONO8);
+    if(image->encoding.compare("mono16")== 0 || image->encoding.compare("MONO16")== 0 ){
+        cv_ptr = cv_bridge::toCvShare(image, sensor_msgs::image_encodings::MONO16);
+    }else{
+        cv_ptr = cv_bridge::toCvShare(image, sensor_msgs::image_encodings::MONO8);
+    }
   }
   catch (cv_bridge::Exception& e)
   {
