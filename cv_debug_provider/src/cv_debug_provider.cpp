@@ -9,7 +9,6 @@ CvDebugProvider::CvDebugProvider(ros::NodeHandle nh, const std::string encoding)
 
   it_out_ .reset(new image_transport::ImageTransport(nh));
   image_pub_ = it_out_->advertise("debug_image_array", 4);
-
 }
 
 
@@ -17,12 +16,19 @@ bool CvDebugProvider::addDebugImage(const cv::Mat& img)
 {
   if (image_pub_.getNumSubscribers() > 0)
   {
-    if (img.type() == CV_8UC1){
+    if (img.type() == CV_16UC1){
+        cv::Mat tmp, converted_image;
+        img.convertTo(tmp, CV_8UC1);
+        cv::cvtColor(tmp, converted_image, CV_GRAY2BGR);
+        debug_img_vector_.push_back(converted_image);
+    }else if (img.type() == CV_8UC1 ){
       cv::Mat converted_image;
       cv::cvtColor(img, converted_image, CV_GRAY2BGR);
       debug_img_vector_.push_back(converted_image);
     }else if (img.type() == CV_8UC3){
       debug_img_vector_.push_back(img);
+    }else {
+        ROS_ERROR("Unknown image encoding: %d", img.type());
     }
   }
 
