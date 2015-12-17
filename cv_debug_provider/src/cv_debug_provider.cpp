@@ -18,7 +18,7 @@ bool CvDebugProvider::addDebugImage(const cv::Mat& img)
   {
     if (img.type() == CV_16UC1){
         cv::Mat tmp, converted_image;
-        img.convertTo(tmp, CV_8UC1);
+        img.convertTo(tmp, CV_8UC1, 0.00390625);
         cv::cvtColor(tmp, converted_image, CV_GRAY2BGR);
         debug_img_vector_.push_back(converted_image);
     }else if (img.type() == CV_8UC1 ){
