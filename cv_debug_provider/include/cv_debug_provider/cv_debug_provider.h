@@ -62,6 +62,8 @@ public:
 
   bool areDebugImagesRequested() const;
 
+  cv::Mat& getLastAddedImage();
+
 protected:
 
   boost::shared_ptr<image_transport::ImageTransport> it_out_;

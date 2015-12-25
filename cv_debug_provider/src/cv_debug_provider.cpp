@@ -56,3 +56,10 @@ bool CvDebugProvider::areDebugImagesRequested() const
 {
   return (image_pub_.getNumSubscribers() > 0);
 }
+
+cv::Mat& CvDebugProvider::getLastAddedImage()
+{
+  //@Todo: Properly use iterator
+  size_t size = debug_img_vector_.size();
+  return debug_img_vector_[size-1];
+}
