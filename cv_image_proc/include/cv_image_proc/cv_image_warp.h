@@ -67,7 +67,10 @@ std::vector<Eigen::Vector3d> getSampleRectangleObjectPoints(double size);
 void getPerspectiveTransformedImage(const std::vector<cv::Point2d> points_image_coords_,
                                     const cv::Mat& source_img,
                                     cv::Mat& target_img,
-                                    const cv::Size& target_size_pixels);
+                                    const cv::Size& target_size_pixels,
+                                    const int interpolation_mode=cv::INTER_CUBIC,
+                                    const int border_mode=cv::BORDER_CONSTANT,
+                                    const cv::Scalar& border_value=cv::Scalar());
 
 class WarpProvider{
 public:

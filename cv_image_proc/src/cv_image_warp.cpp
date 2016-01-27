@@ -53,7 +53,10 @@ std::vector<Eigen::Vector3d> getSampleRectangleObjectPoints(double rectangle_siz
 void getPerspectiveTransformedImage(const std::vector<cv::Point2d> points_image_coords_,
                                     const cv::Mat& source_img,
                                     cv::Mat& target_img,
-                                    const cv::Size& target_size_pixels)
+                                    const cv::Size& target_size_pixels,
+                                    const int interpolation_mode,
+                                    const int border_mode,
+                                    const cv::Scalar& border_value)
 {
   cv::Point2f src[4];
   cv::Point2f dst[4];
@@ -75,7 +78,7 @@ void getPerspectiveTransformedImage(const std::vector<cv::Point2d> points_image_
   dst[BOTTOM_RIGHT] = cv::Point2f(x_max,0.0f);
 
   cv::Mat M = cv::getPerspectiveTransform(src, dst);
-  cv::warpPerspective(source_img, target_img, M, target_size_pixels, CV_INTER_LANCZOS4);
+  cv::warpPerspective(source_img, target_img, M, target_size_pixels, interpolation_mode, border_mode, border_value);
 }
 
 
