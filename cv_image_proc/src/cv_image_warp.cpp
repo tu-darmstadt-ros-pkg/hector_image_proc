@@ -78,6 +78,7 @@ void getPerspectiveTransformedImage(const std::vector<cv::Point2d> points_image_
   dst[BOTTOM_RIGHT] = cv::Point2f(x_max,0.0f);
 
   cv::Mat M = cv::getPerspectiveTransform(src, dst);
+  //cv::warpPerspective(source_img, target_img, M, target_size_pixels, CV_INTER_AREA, cv::BORDER_CONSTANT , heatval );
   cv::warpPerspective(source_img, target_img, M, target_size_pixels, interpolation_mode, border_mode, border_value);
 }
 
@@ -95,7 +96,11 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
                                   const geometry_msgs::Pose& pose_object_frame,
                                   const std::vector<Eigen::Vector3d>& points_object_frame,
                                   const cv::Size& target_size_pixels,
-                                  cv_bridge::CvImagePtr out_msg)
+                                  cv_bridge::CvImagePtr out_msg,
+                                  const int interpolation_mode,
+                                  const int border_mode,
+                                  const cv::Scalar& border_value
+                                 )
 {
 
   if (points_object_frame.size() != 4)
@@ -209,7 +214,7 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
   getPerspectiveTransformedImage(points_image_coords_,
                                  cv_ptr->image,
                                  out_msg->image,
-                                 target_size_pixels);
+                                 target_size_pixels, interpolation_mode, border_mode, border_value);
   return true;
   
 }

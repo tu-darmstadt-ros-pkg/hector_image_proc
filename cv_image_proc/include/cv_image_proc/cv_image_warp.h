@@ -88,6 +88,9 @@ public:
    * frame of reference that are the corner points of the image
    * that is provided
    * @param target_size_pixels The size in pixels for the target image
+   * @param interpolation_mode The interpolation mode for border,
+   * @param border_mode The border mode value type,
+   * @param border_value The value used for border,
    * @return Indication if operation was successful
    */
   bool getWarpedImage(const sensor_msgs::ImageConstPtr& image,
@@ -95,7 +98,11 @@ public:
                       const geometry_msgs::Pose& pose_object_frame,
                       const std::vector<Eigen::Vector3d>& points_object_frame,
                       const cv::Size& target_size_pixels,
-                      cv_bridge::CvImagePtr cv_ptr);
+                      cv_bridge::CvImagePtr cv_ptr,
+                      const int interpolation_mode=cv::INTER_CUBIC,
+                      const int border_mode=cv::BORDER_CONSTANT,
+                      const cv::Scalar& border_value=cv::Scalar()
+                     );
 
 protected:
   boost::shared_ptr<tf::Transformer> transformer_;
