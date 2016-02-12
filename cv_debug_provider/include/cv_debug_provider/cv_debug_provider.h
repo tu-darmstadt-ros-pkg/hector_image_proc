@@ -42,34 +42,55 @@
 #include <image_transport/camera_subscriber.h>
 
 
-
+/**
+ * This class provides easy to use tooling to quickly
+ * publish OpenCV images (i.e. cv::Mat) via ROS and view
+ * it remotely.
+ */
 class CvDebugProvider
 {
 public:
+  /**
+   * Contructor, the Nodehandle should be within a unique namespace.
+   * The encoding default to BGR8 at the moment and is ignored due
+   * to a issue encountered.
+   */
   CvDebugProvider(ros::NodeHandle nh, const std::string encoding = sensor_msgs::image_encodings::BGR8);
 
   /**
-     * Adds a debug image if there are subscribers.
-     * In case of no subscribers, does not add image.
-     */
+   * Adds a debug image if there are subscribers.
+   * In case of no subscribers, does not add image.
+   * @param img The image to be added
+   * @return Indicated success or failure of adding
+   */
   bool addDebugImage(const cv::Mat& img);
 
   /**
-     * Publishes debug image if there are subscribers
-     * and clears the debug image vector afterwards
-     */
+    * Publishes debug image if there are subscribers
+    * and clears the debug image vector afterwards.
+    * This should be called at the end of image processing
+    * operations.
+    */
   void publishDebugImage();
 
+  /**
+   * True if there is a subscriber to the debug image
+   * publisher. Can be used to selectively perform computation
+   * only when somebody is interested in debug data
+   * @return true if there is a subscriber to debug image data
+   */
   bool areDebugImagesRequested() const;
 
+  /**
+   * @return Reference to the last image added to the internal debug
+   * image vector.
+   */
   cv::Mat& getLastAddedImage();
 
 protected:
 
   boost::shared_ptr<image_transport::ImageTransport> it_out_;
   image_transport::Publisher image_pub_;
-
-
 
   sensor_msgs::ImageConstPtr latest_img_;
   sensor_msgs::CameraInfoConstPtr latest_camera_info_;
