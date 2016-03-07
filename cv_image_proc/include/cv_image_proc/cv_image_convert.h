@@ -40,26 +40,68 @@ namespace cv_image_convert{
 /**
  * Converts a FC1 image to UC8 so that min_val maps to 0 and max_val to 255.
  */
-bool getUC8ImageFromFC1(const cv::Mat& in, cv::Mat out, double min_val, double max_val)
-{
-  cv::Mat tmp = in;
-  
-  for (size_t i = 0; i < tmp.total(); ++i){
-    tmp.at<float>(i) -= min_val;
-  }
-  
-  
+bool getUC8ImageFromFC1(const cv::Mat& in, cv::Mat& out, double min_val, double max_val)
+{  
   const double alpha = 255.0 / (max_val - min_val);
   const double beta = -alpha * min_val;
-  cv_ptr->image.convertTo(convertedImage, CV_8UC1, alpha, beta);  
-  
-  
-  cv::Mat upper_thresh;
-  cv::threshold(tmp, upper_thresh, 2.5, 0.0, cv::THRESH_TRUNC);
+  in.convertTo(out, CV_8UC1, alpha, beta);   
+}
 
-  cv::Mat lower_thresh;
-  cv::threshold(upper_thresh, lower_thresh, 0.8, 0.0, cv::THRESH_TOZERO);
-  
+bool getInpaintedImage(const cv::Mat&in, cv::Mat& out, double min_val, double max_val)
+{
+  cv::Mat tmp;
+  cv_image_convert::getUC8ImageFromFC1(in, tmp, min_val, max_val);
+
+  cv::Mat mask(tmp.size(), CV_8UC1);
+
+  for (size_t i = 0; i < tmp.total(); ++i){
+    if (tmp.at<uchar>(i) == 0){
+      mask.at<uchar>(i) = 255;
+    }else{
+      mask.at<uchar>(i) = 0;
+    }
+  }
+
+  int erosion_type = cv::MORPH_RECT;
+  int erosion_size = 2;
+  cv::Mat element = cv::getStructuringElement( erosion_type,
+                                       cv::Size( 2*erosion_size + 1, 2*erosion_size+1 ),
+                                       cv::Point( erosion_size, erosion_size ) );
+
+  cv::Mat eroded;
+  cv::erode(mask, eroded, element);
+  //eroded = 255 - eroded;
+
+  cv::Mat local_mask;
+  cv::compare(mask, eroded, local_mask, cv::CMP_NE);
+
+  cv::inpaint(tmp, local_mask, out, 0.0, cv::INPAINT_NS);
+}
+
+bool getGradientMagnitudeImage(const cv::Mat& in, cv::Mat& out)
+{
+  cv::Mat blurred;
+  cv::GaussianBlur( in, blurred, cv::Size(3,3), 0, 0, cv::BORDER_DEFAULT );
+
+  int kernel_size = 3;
+  int scale = 1;
+  int delta = 0;
+  int ddepth = CV_32F;
+
+  cv::Mat grad_x, grad_y;
+  cv::Mat abs_grad_x, abs_grad_y;
+
+  /// Gradient X
+  cv::Sobel( blurred, grad_x, ddepth, 1, 0, 3, scale, delta, cv::BORDER_DEFAULT );
+  /// Gradient Y
+  cv::Sobel( blurred, grad_y, ddepth, 0, 1, 3, scale, delta, cv::BORDER_DEFAULT );
+
+  cv::Mat grad_mag_img;
+  cv::magnitude(grad_x, grad_y, grad_mag_img);
+
+
+  cv::convertScaleAbs( grad_mag_img, out );
+
 }
 
 
