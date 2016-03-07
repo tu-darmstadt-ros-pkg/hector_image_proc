@@ -26,11 +26,13 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#ifndef CV_LINE_TOOLS_H___
-#define CV_LINE_TOOLS_H___
+#ifndef CV_IMAGE_CONVERT_H___
+#define CV_IMAGE_CONVERT_H___
 
 #include <opencv/cv.h>
 #include <opencv2/imgproc/imgproc.hpp>
+
+#include <opencv2/photo/photo.hpp>
 
 #include <Eigen/Core>
 
