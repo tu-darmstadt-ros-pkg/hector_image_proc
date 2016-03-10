@@ -52,7 +52,7 @@ class CvDebugProvider
 public:
   /**
    * Contructor, the Nodehandle should be within a unique namespace.
-   * The encoding default to BGR8 at the moment and is ignored due
+   * The encoding defaults to BGR8 at the moment and is ignored due
    * to a issue encountered.
    */
   CvDebugProvider(ros::NodeHandle nh, const std::string encoding = sensor_msgs::image_encodings::BGR8);
@@ -93,7 +93,6 @@ protected:
   image_transport::Publisher image_pub_;
 
   sensor_msgs::ImageConstPtr latest_img_;
-  sensor_msgs::CameraInfoConstPtr latest_camera_info_;
 
   std::vector<cv::Mat> debug_img_vector_;
   std::string encoding_;
