@@ -43,11 +43,19 @@ namespace cv_image_convert{
  * Converts a FC1 image to UC8 so that min_val maps to 0 and max_val to 255.
  */
 bool getUC8ImageFromFC1(const cv::Mat& in, cv::Mat& out, double min_val, double max_val)
-{  
+{
   const double alpha = 255.0 / (max_val - min_val);
   const double beta = -alpha * min_val;
   in.convertTo(out, CV_8UC1, alpha, beta);   
 }
+
+/*
+bool getUC8ImageFromFC1AutoScaled(const cv::Mat&,
+                                  cv::Mat& out)
+{
+
+}
+*/
 
 bool getInpaintedImage(const cv::Mat&in, cv::Mat& out, double min_val, double max_val)
 {
