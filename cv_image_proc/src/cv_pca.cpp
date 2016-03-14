@@ -79,8 +79,8 @@ double getOrientation(const std::vector<cv::Point> &pts, cv::Mat &img)
     }
     // Draw the principal components
     cv::circle(img, cntr, 3, cv::Scalar(255, 0, 255), 2);
-    cv::Point p1 = cntr + 0.02 * cv::Point(static_cast<int>(eigen_vecs[0].x * eigen_val[0]), static_cast<int>(eigen_vecs[0].y * eigen_val[0]));
-    cv::Point p2 = cntr - 0.02 * cv::Point(static_cast<int>(eigen_vecs[1].x * eigen_val[1]), static_cast<int>(eigen_vecs[1].y * eigen_val[1]));
+    cv::Point p1 = cntr + cv::Point(static_cast<int>(eigen_vecs[0].x * eigen_val[0]), static_cast<int>(eigen_vecs[0].y * eigen_val[0]));
+    cv::Point p2 = cntr - cv::Point(static_cast<int>(eigen_vecs[1].x * eigen_val[1]), static_cast<int>(eigen_vecs[1].y * eigen_val[1]));
     drawAxis(img, cntr, p1, cv::Scalar(0, 255, 0), 1);
     drawAxis(img, cntr, p2, cv::Scalar(255, 255, 0), 5);
     double angle = atan2(eigen_vecs[0].y, eigen_vecs[0].x); // orientation in radians
