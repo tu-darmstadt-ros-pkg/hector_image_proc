@@ -57,6 +57,8 @@ bool getUC8ImageFromFC1AutoScaled(const cv::Mat&,
 }
 */
 
+
+// Inpaints the image around the areas that are within min_val and max_val
 bool getInpaintedImage(const cv::Mat&in, cv::Mat& out, double min_val, double max_val)
 {
   cv::Mat tmp;
@@ -86,6 +88,21 @@ bool getInpaintedImage(const cv::Mat&in, cv::Mat& out, double min_val, double ma
   cv::compare(mask, eroded, local_mask, cv::CMP_NE);
 
   cv::inpaint(tmp, local_mask, out, 0.0, cv::INPAINT_NS);
+
+  return true;
+}
+
+bool getOpenedImage(const cv::Mat& in, cv::Mat& out, int open_size)
+{
+  int morph_type = cv::MORPH_RECT;
+  int morph_size = 2;
+  cv::Mat element = cv::getStructuringElement( morph_type,
+                                       cv::Size( 2*morph_size + 1, 2*morph_size+1 ),
+                                       cv::Point( morph_size, morph_size ) );
+
+  cv::morphologyEx(in, out, cv::MORPH_OPEN, element);
+
+  return true;
 }
 
 bool getGradientMagnitudeImage(const cv::Mat& in, cv::Mat& out)
@@ -111,6 +128,8 @@ bool getGradientMagnitudeImage(const cv::Mat& in, cv::Mat& out)
 
 
   cv::convertScaleAbs( grad_mag_img, out );
+
+  return true;
 
 }
 

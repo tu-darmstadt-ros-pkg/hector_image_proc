@@ -1,7 +1,4 @@
 #include <cv_debug_provider/cv_debug_provider.h>
-
-
-
 CvDebugProvider::CvDebugProvider(ros::NodeHandle nh, const std::string encoding)
   : encoding_(encoding)
 {
@@ -17,18 +14,31 @@ bool CvDebugProvider::addDebugImage(const cv::Mat& img)
   if (image_pub_.getNumSubscribers() > 0)
   {
     if (img.type() == CV_16UC1){
-        cv::Mat tmp, converted_image;
-        img.convertTo(tmp, CV_8UC1, 0.00390625);
-        cv::cvtColor(tmp, converted_image, CV_GRAY2BGR);
-        debug_img_vector_.push_back(converted_image);
+      cv::Mat tmp, converted_image;
+      img.convertTo(tmp, CV_8UC1, 0.00390625);
+      cv::cvtColor(tmp, converted_image, CV_GRAY2BGR);
+      debug_img_vector_.push_back(converted_image);
     }else if (img.type() == CV_8UC1 ){
       cv::Mat converted_image;
       cv::cvtColor(img, converted_image, CV_GRAY2BGR);
       debug_img_vector_.push_back(converted_image);
     }else if (img.type() == CV_8UC3){
       debug_img_vector_.push_back(img);
-    }else {
-        ROS_ERROR("Unknown image encoding: %d", img.type());
+    }else if (img.type() == CV_32FC1){
+      cv::Mat debug_out_depth_UC8;
+
+      //@TODO: Be more clever about finding max and min
+      double max_val = 1.0;
+      double min_val = 0.0;
+      const double alpha = 255.0 / (max_val - min_val);
+      const double beta = -alpha * min_val;
+      img.convertTo(debug_out_depth_UC8, CV_8UC1, alpha, beta);
+
+      cv::Mat converted_image;
+      cv::cvtColor(debug_out_depth_UC8, converted_image, CV_GRAY2BGR);
+      debug_img_vector_.push_back(converted_image);
+    }else{
+      ROS_ERROR("Unknown image encoding: %d", img.type());
     }
   }
 
