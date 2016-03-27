@@ -37,6 +37,11 @@ bool CvDebugProvider::addDebugImage(const cv::Mat& img)
       cv::Mat converted_image;
       cv::cvtColor(debug_out_depth_UC8, converted_image, CV_GRAY2BGR);
       debug_img_vector_.push_back(converted_image);
+    }else if (img.type() == CV_8UC4){
+      //ROS_ERROR("Type CV_8UC4");
+      cv::Mat converted_image;
+      cv::cvtColor(img, converted_image, CV_BGRA2BGR);
+      debug_img_vector_.push_back(converted_image);
     }else{
       ROS_ERROR("Unknown image encoding: %d", img.type());
     }
