@@ -55,7 +55,7 @@ public:
    * The encoding defaults to BGR8 at the moment and is ignored due
    * to a issue encountered.
    */
-  CvDebugProvider(ros::NodeHandle nh, const std::string encoding = sensor_msgs::image_encodings::BGR8);
+  CvDebugProvider(ros::NodeHandle nh, const std::string encoding = sensor_msgs::image_encodings::BGR8, bool latch = false);
 
   /**
    * Adds a debug image if there are subscribers.

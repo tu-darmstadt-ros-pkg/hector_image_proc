@@ -1,11 +1,11 @@
 #include <cv_debug_provider/cv_debug_provider.h>
-CvDebugProvider::CvDebugProvider(ros::NodeHandle nh, const std::string encoding)
+CvDebugProvider::CvDebugProvider(ros::NodeHandle nh, const std::string encoding, bool latch)
   : encoding_(encoding)
 {
   encoding_ = sensor_msgs::image_encodings::BGR8;
 
   it_out_ .reset(new image_transport::ImageTransport(nh));
-  image_pub_ = it_out_->advertise("debug_image_array", 4);
+  image_pub_ = it_out_->advertise("debug_image_array", 4, latch);
 }
 
 
