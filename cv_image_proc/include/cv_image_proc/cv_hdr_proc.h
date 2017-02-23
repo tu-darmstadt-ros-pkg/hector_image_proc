@@ -45,6 +45,8 @@
 
 #include <cv_bridge/cv_bridge.h>
 
+#include <sstream>
+#include <opencv2/highgui.hpp>
 
 namespace cv_hdr_proc{
 
@@ -52,37 +54,85 @@ class HdrProcessor{
 
 public:
 
-    bool createHdrImage(const std::vector<sensor_msgs::Image>& images,
+    bool createExposureFusionImage(const std::vector<cv::Mat>& images,
+                        const std::vector<float>& exposure_times,
+                        cv::Mat& result)
+    {
+#if CV_MAJOR_VERSION == 2
+  return false;
+#elif CV_MAJOR_VERSION == 3
+  ROS_INFO("Create HDR");
+
+
+
+  ROS_INFO("Pre Calibrate");
+
+  for (size_t i = 0; i < images.size(); ++i)
+  {
+    //cv::Mat bla;
+    //bla.depth()
+    std::cout << "d: " << images[i].depth() << " ch: " << images[i].channels() << "\n";
+  }
+  //cv::Mat response;
+  //cv::Ptr<cv::CalibrateDebevec> calibrate = cv::createCalibrateDebevec();
+  //calibrate->process(images, response, exposure_times);
+
+  ROS_INFO("Post Calibrate");
+  cv::Mat fusion;
+  //cv::Ptr<cv::MergeMertens> merge_mertens = cv::createMergeMertens();
+  //merge_mertens->process(images, fusion);
+  ROS_INFO("Post merge");
+
+  //Mat hdr;
+  //ROS_INFO_STREAM("ims: " << images.size() << " exps :" << exposure_times.size() << "\n");
+
+
+  //cv::Mat hdr;
+  //cv::Ptr<cv::MergeDebevec> merge_debevec = cv::createMergeDebevec();
+  //merge_debevec->process(images, hdr, exposure_times);
+
+  //cv::Ptr<cv::MergeDebevec> merge_debevec = cv::createMergeDebevec();
+  //merge_debevec->process(images, result, exposure_times, response);
+  //cv::Mat fusion;
+  cv::Ptr<cv::MergeMertens> merge_mertens = cv::createMergeMertens();
+  merge_mertens->process(images, result);
+  ROS_INFO("Done");
+  return true;
+#endif
+    }
+
+    bool createExposureFusionImage(const std::vector<sensor_msgs::Image>& images,
                         const std::vector<sensor_msgs::CameraInfo>& camera_infos,
                         const std::vector<float>& exposure_times,
                         cv::Mat& result)
     {
-    #if CV_MAJOR_VERSION == 2
-      return false;
-    #elif CV_MAJOR_VERSION == 3
+
+      ROS_INFO("Create HDR");
 
       std::vector<cv::Mat> images_cv;
       std::vector<cv_bridge::CvImageConstPtr> cv_ptr_images;
+
+      //std::vector<float> exposure_times_cpy = exposure_times;
+      cv::Mat exposure_times_cpy(exposure_times);
 
       //@TODO Make this nicer (less copying)
       for(size_t i = 0; i < images.size(); ++i)
       {
         cv_ptr_images.push_back(cv_bridge::toCvCopy(images[i]));
         images_cv.push_back(cv_ptr_images[i]->image);
+        //exposure_times_cpy.push_back(1.0/ exposure_times[i]);
+
+        //int a = i;
+        //std::stringstream ss;
+        //ss << a;
+        //std::string str = ss.str();
+        //cv::imwrite("test_zoom" + str +".png",cv_ptr_images[i]->image);
       }
 
-      cv::Mat response;
-      cv::Ptr<cv::CalibrateDebevec> calibrate = cv::createCalibrateDebevec();
-      calibrate->process(images_cv, response, exposure_times);
+      return createExposureFusionImage(images_cv, exposure_times, result);
 
-      //cv::Mat fusion;
-      cv::Ptr<cv::MergeMertens> merge_mertens = cv::createMergeMertens();
-      merge_mertens->process(images, result);
-
-      return true;
-    #endif
     }
-   //merge_mertens->process(images, fusion);
+   //
 
 
     //void ();
