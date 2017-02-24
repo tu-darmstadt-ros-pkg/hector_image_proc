@@ -62,23 +62,23 @@ public:
 
 
 
-  ROS_INFO("Pre Calibrate");
+  //ROS_INFO("Pre Calibrate");
 
-  for (size_t i = 0; i < images.size(); ++i)
-  {
+  //for (size_t i = 0; i < images.size(); ++i)
+ // {
     //cv::Mat bla;
     //bla.depth()
-    std::cout << "d: " << images[i].depth() << " ch: " << images[i].channels() << "\n";
-  }
+   // std::cout << "d: " << images[i].depth() << " ch: " << images[i].channels() << "\n";
+  //}
   //cv::Mat response;
   //cv::Ptr<cv::CalibrateDebevec> calibrate = cv::createCalibrateDebevec();
   //calibrate->process(images, response, exposure_times);
 
-  ROS_INFO("Post Calibrate");
-  cv::Mat fusion;
+  //ROS_INFO("Post Calibrate");
+  //cv::Mat fusion;
   //cv::Ptr<cv::MergeMertens> merge_mertens = cv::createMergeMertens();
   //merge_mertens->process(images, fusion);
-  ROS_INFO("Post merge");
+  //ROS_INFO("Post merge");
 
   //Mat hdr;
   //ROS_INFO_STREAM("ims: " << images.size() << " exps :" << exposure_times.size() << "\n");
