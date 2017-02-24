@@ -45,9 +45,6 @@
 
 #include <cv_bridge/cv_bridge.h>
 
-#include <sstream>
-#include <opencv2/highgui.hpp>
-
 namespace cv_hdr_proc{
 
 class HdrProcessor{
