@@ -92,7 +92,7 @@ public:
   ros::Time start = ros::Time::now();
   cv::Ptr<cv::MergeMertens> merge_mertens = cv::createMergeMertens();
   merge_mertens->process(images, result);
-  ROS_INFO("Exposure fusion performed in %s secodnds", (ros::Time::now() - start).toSec());
+  ROS_INFO("Exposure fusion performed in %f seconds", (ros::Time::now() - start).toSec());
   return true;
 #endif
     }
