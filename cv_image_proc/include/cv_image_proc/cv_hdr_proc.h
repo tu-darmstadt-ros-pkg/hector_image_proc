@@ -129,6 +129,33 @@ public:
       return createExposureFusionImage(images_cv, exposure_times, result);
 
     }
+
+
+    bool createExposureFusionImage(const std::vector<sensor_msgs::ImageConstPtr>& images,
+                        const std::vector<sensor_msgs::CameraInfoConstPtr>& camera_infos,
+                        const std::vector<float>& exposure_times,
+                        cv::Mat& result)
+    {
+
+      ROS_INFO("Create HDR");
+
+      std::vector<cv::Mat> images_cv;
+      std::vector<cv_bridge::CvImageConstPtr> cv_ptr_images;
+
+      //std::vector<float> exposure_times_cpy = exposure_times;
+      //cv::Mat exposure_times_cpy(exposure_times);
+
+      //@TODO Make this nicer (less copying)
+      for(size_t i = 0; i < images.size(); ++i)
+      {
+        cv_ptr_images.push_back(cv_bridge::toCvShare(images[i]));
+        images_cv.push_back(cv_ptr_images[i]->image);
+      }
+
+      return createExposureFusionImage(images_cv, exposure_times, result);
+
+    }
+
    //
 
 
