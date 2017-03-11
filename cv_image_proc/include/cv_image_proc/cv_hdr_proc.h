@@ -58,8 +58,6 @@ public:
 #if CV_MAJOR_VERSION == 2
   return false;
 #elif CV_MAJOR_VERSION == 3
-  ROS_INFO("Create HDR");
-
 
 
   //ROS_INFO("Pre Calibrate");
@@ -91,9 +89,10 @@ public:
   //cv::Ptr<cv::MergeDebevec> merge_debevec = cv::createMergeDebevec();
   //merge_debevec->process(images, result, exposure_times, response);
   //cv::Mat fusion;
+  ros::Time start = ros::Time::now();
   cv::Ptr<cv::MergeMertens> merge_mertens = cv::createMergeMertens();
   merge_mertens->process(images, result);
-  ROS_INFO("Done");
+  ROS_INFO("Exposure fusion performed in %s secodnds", (ros::Time::now() - start).toSec());
   return true;
 #endif
     }
