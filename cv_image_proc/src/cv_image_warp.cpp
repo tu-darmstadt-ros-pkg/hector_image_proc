@@ -77,6 +77,10 @@ void getPerspectiveTransformedImage(const std::vector<cv::Point2d> points_image_
   dst[UPPER_RIGHT]  = cv::Point2f(x_max, y_max);
   dst[BOTTOM_RIGHT] = cv::Point2f(x_max,0.0f);
 
+  for (size_t i = 0; i < 4; ++i){
+    ROS_INFO("src: %f %f dst: %f %f", src[i].x, src[i].y, dst[i].x, dst[i].y);
+  }
+
   cv::Mat M = cv::getPerspectiveTransform(src, dst);
   //cv::warpPerspective(source_img, target_img, M, target_size_pixels, CV_INTER_AREA, cv::BORDER_CONSTANT , heatval );
   cv::warpPerspective(source_img, target_img, M, target_size_pixels, interpolation_mode, border_mode, border_value);
@@ -139,12 +143,12 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
                     object_pose_camera_tf.getOrigin().getZ()));
 
   // Note CV vs standard ROS coords
-  if((object_camera_pixels.x < 0.0) || (object_camera_pixels.x > cam_info->width) ||
-     (object_camera_pixels.y < 0.0) || (object_camera_pixels.y > cam_info->height))
-  {
-    ROS_WARN("Projection outside image. Coords: %f, %f",object_camera_pixels.x, object_camera_pixels.y);
-    return false;
-  }
+  //if((object_camera_pixels.x < 0.0) || (object_camera_pixels.x > cam_info->width) ||
+  //   (object_camera_pixels.y < 0.0) || (object_camera_pixels.y > cam_info->height))
+  //{
+    ROS_INFO("Projection outside image. Coords: %f, %f",object_camera_pixels.x, object_camera_pixels.y);
+    //return false;
+  //}
 
   //ROS_INFO("Projection. Coords: %f, %f",object_camera_pixels.x, object_camera_pixels.y);
 
@@ -188,13 +192,17 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
   for (size_t i = 0; i < 4; ++i)
   {
 
+
     Eigen::Vector3d point_cam = transform_camera_t_world *
         transform_world_t_object *
         points_object_frame[i];
 
+
     points_image_coords_[i] = cam_model.project3dToPixel(
           cv::Point3d(point_cam.x(), point_cam.y(), point_cam.z()));
 
+    std::cout << "\npoint_obj\n" << points_object_frame[i] << "\npoint_cam\n" << point_cam << "\point_img\n" <<  points_image_coords_[i].x <<
+              " " <<  points_image_coords_[i].y << "\n";
 
     //plane_poly.polygon.points[i].x = point_cam.x();
     //plane_poly.polygon.points[i].y = point_cam.y();
