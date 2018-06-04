@@ -91,6 +91,8 @@ public:
    * @param interpolation_mode The interpolation mode for border,
    * @param border_mode The border mode value type,
    * @param border_value The value used for border,
+   * @param allow_pose_off_camera Indicates if the pose of object
+   * might be outside camera fov
    * @return Indication if operation was successful
    */
   bool getWarpedImage(const sensor_msgs::ImageConstPtr& image,
@@ -101,7 +103,8 @@ public:
                       cv_bridge::CvImagePtr cv_ptr,
                       const int interpolation_mode=cv::INTER_CUBIC,
                       const int border_mode=cv::BORDER_CONSTANT,
-                      const cv::Scalar& border_value=cv::Scalar()
+                      const cv::Scalar& border_value=cv::Scalar(),
+                      const bool allow_pose_off_camera = false
                      );
 
 protected:

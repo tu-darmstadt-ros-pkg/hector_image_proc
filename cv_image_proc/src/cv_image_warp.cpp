@@ -99,7 +99,8 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
                                   cv_bridge::CvImagePtr out_msg,
                                   const int interpolation_mode,
                                   const int border_mode,
-                                  const cv::Scalar& border_value
+                                  const cv::Scalar& border_value,
+                                  const bool allow_pose_off_camera
                                  )
 {
 
@@ -138,12 +139,14 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
                     object_pose_camera_tf.getOrigin().getY(),
                     object_pose_camera_tf.getOrigin().getZ()));
 
-  // Note CV vs standard ROS coords
-  if((object_camera_pixels.x < 0.0) || (object_camera_pixels.x > cam_info->width) ||
-     (object_camera_pixels.y < 0.0) || (object_camera_pixels.y > cam_info->height))
-  {
-    ROS_WARN("Projection outside image. Coords: %f, %f",object_camera_pixels.x, object_camera_pixels.y);
-    return false;
+  if (!allow_pose_off_camera){
+    // Note CV vs standard ROS coords
+    if((object_camera_pixels.x < 0.0) || (object_camera_pixels.x > cam_info->width) ||
+       (object_camera_pixels.y < 0.0) || (object_camera_pixels.y > cam_info->height))
+    {
+      ROS_WARN("Projection outside image. Coords: %f, %f",object_camera_pixels.x, object_camera_pixels.y);
+      return false;
+    }
   }
 
   //ROS_INFO("Projection. Coords: %f, %f",object_camera_pixels.x, object_camera_pixels.y);
@@ -216,7 +219,7 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
                                  out_msg->image,
                                  target_size_pixels, interpolation_mode, border_mode, border_value);
   return true;
-  
+
 }
 
 
