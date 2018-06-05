@@ -113,6 +113,22 @@ protected:
 
 };
 
+class RemapWarpProvider{
+public:
+    
+  RemapWarpProvider(boost::shared_ptr<tf::Transformer> transformer_in,
+                    const std::string target_frame_in = std::string("map"));
+  
+  bool generateLookupTable();
+  
+  bool warpImage();
+
+protected:
+  boost::shared_ptr<tf::Transformer> transformer_;
+  std::string target_frame_;
+    
+}
+
 
 }
 

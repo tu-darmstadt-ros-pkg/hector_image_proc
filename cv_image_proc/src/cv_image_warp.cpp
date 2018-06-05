@@ -151,23 +151,7 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
 
   //ROS_INFO("Projection. Coords: %f, %f",object_camera_pixels.x, object_camera_pixels.y);
 
-  cv_bridge::CvImageConstPtr cv_ptr;
-  try
-  {
-    //if (sensor_msgs::image_encodings::isColor(latest_img_->encoding))
-    //  cv_ptr = cv_bridge::toCvShare(latest_img_, sensor_msgs::image_encodings::BGR8);
-    //else
-    if(image->encoding.compare("mono16")== 0 || image->encoding.compare("MONO16")== 0 ){
-        cv_ptr = cv_bridge::toCvShare(image, sensor_msgs::image_encodings::MONO16);
-    }else{
-        cv_ptr = cv_bridge::toCvShare(image, sensor_msgs::image_encodings::MONO8);
-    }
-  }
-  catch (cv_bridge::Exception& e)
-  {
-    ROS_ERROR("cv_bridge exception: %s", e.what());
-    return false;
-  }
+
 
   //cv::Mat img = cv_ptr->image;
 
@@ -211,6 +195,25 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
 
   //cv::Mat rectified_image;
   //cv_bridge::CvImage out_msg;
+  
+  cv_bridge::CvImageConstPtr cv_ptr;
+  try
+  {
+    //if (sensor_msgs::image_encodings::isColor(latest_img_->encoding))
+    //  cv_ptr = cv_bridge::toCvShare(latest_img_, sensor_msgs::image_encodings::BGR8);
+    //else
+    if(image->encoding.compare("mono16")== 0 || image->encoding.compare("MONO16")== 0 ){
+        cv_ptr = cv_bridge::toCvShare(image, sensor_msgs::image_encodings::MONO16);
+    }else{
+        cv_ptr = cv_bridge::toCvShare(image, sensor_msgs::image_encodings::MONO8);
+    }
+  }
+  catch (cv_bridge::Exception& e)
+  {
+    ROS_ERROR("cv_bridge exception: %s", e.what());
+    return false;
+  }
+  
   out_msg->header   = image->header;
   out_msg->encoding = cv_ptr->encoding;
 
@@ -220,6 +223,62 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
                                  target_size_pixels, interpolation_mode, border_mode, border_value);
   return true;
 
+}
+
+RemapWarpProvider::RemapWarpProvider(boost::shared_ptr<tf::Transformer> transformer_in,
+                           const std::string target_frame_in)
+  : transformer_(transformer_in)
+  , target_frame_(target_frame_in)
+{
+
+}
+
+bool RemapWarpProvider::generateLookupTable()
+{
+  transformationMatrix = cv::getPerspectiveTransform(originalCorners, destinationCorners);
+    
+  // Since the camera won't be moving, let's pregenerate the remap LUT
+  cv::Mat inverseTransMatrix;
+  cv::invert(transformationMatrix, inverseTransMatrix);
+    
+  // Generate the warp matrix
+  cv::Mat map_x, map_y, srcTM;
+  srcTM = inverseTransMatrix.clone(); // If WARP_INVERSE, set srcTM to transformationMatrix
+    
+  map_x.create(sourceFrame.size(), CV_32FC1);
+  map_y.create(sourceFrame.size(), CV_32FC1);
+    
+  double M11, M12, M13, M21, M22, M23, M31, M32, M33;
+  M11 = srcTM.at<double>(0,0);
+  M12 = srcTM.at<double>(0,1);
+  M13 = srcTM.at<double>(0,2);
+  M21 = srcTM.at<double>(1,0);
+  M22 = srcTM.at<double>(1,1);
+  M23 = srcTM.at<double>(1,2);
+  M31 = srcTM.at<double>(2,0);
+  M32 = srcTM.at<double>(2,1);
+  M33 = srcTM.at<double>(2,2);
+    
+  for (int y = 0; y < sourceFrame.rows; y++) {
+    double fy = (double)y;
+    for (int x = 0; x < sourceFrame.cols; x++) {
+      double fx = (double)x;
+      double w = ((M31 * fx) + (M32 * fy) + M33);
+      w = w != 0.0f ? 1.f / w : 0.0f;
+      float new_x = (float)((M11 * fx) + (M12 * fy) + M13) * w;
+      float new_y = (float)((M21 * fx) + (M22 * fy) + M23) * w;
+      map_x.at<float>(y,x) = new_x;
+      map_y.at<float>(y,x) = new_y;
+    }
+  }
+    
+    // This creates a fixed-point representation of the mapping resulting in ~4% CPU savings
+  transformation_x.create(sourceFrame.size(), CV_16SC2);
+  transformation_y.create(sourceFrame.size(), CV_16UC1);
+  cv::convertMaps(map_x, map_y, transformation_x, transformation_y, false);
+    
+    
+  return true;
 }
 
 
