@@ -127,7 +127,7 @@ protected:
   boost::shared_ptr<tf::Transformer> transformer_;
   std::string target_frame_;
     
-}
+};
 
 
 }

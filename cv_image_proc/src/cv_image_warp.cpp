@@ -82,6 +82,105 @@ void getPerspectiveTransformedImage(const std::vector<cv::Point2d> points_image_
   cv::warpPerspective(source_img, target_img, M, target_size_pixels, interpolation_mode, border_mode, border_value);
 }
 
+bool getImageCoords(std::vector<cv::Point2d>& points_image_coords,
+                    const sensor_msgs::CameraInfoConstPtr& cam_info,
+                    const std::string& target_frame,
+                    const geometry_msgs::Pose& pose_object_frame,
+                    const std::vector<Eigen::Vector3d>& points_object_frame,
+                    tf::Transformer& transformer,
+                    const bool allow_pose_off_camera)
+{
+  if (points_object_frame.size() != 4)
+  {
+    ROS_ERROR("Need exactly four points in object frame for perspective warp, aborting!");
+    return false;
+  }
+
+  tf::Pose object_pose_world_tf;
+  tf::poseMsgToTF(pose_object_frame, object_pose_world_tf);
+
+  //ROS_INFO_STREAM("\n" << object_pose_world << "\n");
+
+  tf::StampedTransform trans_to_camera_frame;
+  try{
+    transformer.lookupTransform(cam_info->header.frame_id, target_frame,
+                                  ros::Time(0), trans_to_camera_frame);
+    //listener->lookupTransform("arm_stereo_left_camera_optical_frame", "world",
+    //                          ros::Time(0), trans_to_camera_frame);
+
+  }
+  catch (tf::TransformException &ex) {
+    ROS_ERROR("Lookup Transform failed: %s",ex.what());
+    return false;
+  }
+
+  tf::Pose object_pose_camera_tf = trans_to_camera_frame * object_pose_world_tf;
+
+  image_geometry::PinholeCameraModel cam_model;
+
+  cam_model.fromCameraInfo(*cam_info);
+
+  cv::Point2d object_camera_pixels = cam_model.project3dToPixel(
+        cv::Point3d(object_pose_camera_tf.getOrigin().getX(),
+                    object_pose_camera_tf.getOrigin().getY(),
+                    object_pose_camera_tf.getOrigin().getZ()));
+
+  if (!allow_pose_off_camera){
+    // Note CV vs standard ROS coords
+    if((object_camera_pixels.x < 0.0) || (object_camera_pixels.x > cam_info->width) ||
+       (object_camera_pixels.y < 0.0) || (object_camera_pixels.y > cam_info->height))
+    {
+      ROS_WARN("Projection outside image. Coords: %f, %f",object_camera_pixels.x, object_camera_pixels.y);
+      return false;
+    }
+  }
+
+  //ROS_INFO("Projection. Coords: %f, %f",object_camera_pixels.x, object_camera_pixels.y);
+
+
+
+  //cv::Mat img = cv_ptr->image;
+
+  //image_pub.publish(cv_ptr);
+
+  Eigen::Affine3d transform_camera_t_world;
+  tf::transformTFToEigen(trans_to_camera_frame, transform_camera_t_world);
+
+  Eigen::Affine3d transform_world_t_object;
+  tf::poseMsgToEigen(pose_object_frame, transform_world_t_object);
+
+  //geometry_msgs::PolygonStamped plane_poly;
+  //plane_poly.header = latest_img_->header;
+  //plane_poly.header.frame_id = "arm_stereo_left_camera_optical_frame";
+
+  //plane_poly.polygon.points.resize(4);
+
+  //std::vector<cv::Point2d> points_image_coords_;
+  points_image_coords.resize(4);
+
+  for (size_t i = 0; i < 4; ++i)
+  {
+
+    Eigen::Vector3d point_cam = transform_camera_t_world *
+        transform_world_t_object *
+        points_object_frame[i];
+
+    points_image_coords[i] = cam_model.project3dToPixel(
+          cv::Point3d(point_cam.x(), point_cam.y(), point_cam.z()));
+
+
+    //plane_poly.polygon.points[i].x = point_cam.x();
+    //plane_poly.polygon.points[i].y = point_cam.y();
+    //plane_poly.polygon.points[i].z = point_cam.z();
+
+    //std::cout << "\nx: " << object_rectify_plane_points_[i].point_image.x << " y: " <<
+    //            object_rectify_plane_points_[i].point_image.y <<"\n";
+  }
+
+  return true;
+
+}
+
 
 WarpProvider::WarpProvider(boost::shared_ptr<tf::Transformer> transformer_in,
                            const std::string target_frame_in)
@@ -103,7 +202,7 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
                                   const bool allow_pose_off_camera
                                  )
 {
-
+   /*
   if (points_object_frame.size() != 4)
   {
     ROS_ERROR("Need exactly four points in object frame for perspective warp, aborting!");
@@ -190,11 +289,24 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
     //std::cout << "\nx: " << object_rectify_plane_points_[i].point_image.x << " y: " <<
     //            object_rectify_plane_points_[i].point_image.y <<"\n";
   }
+  */
 
   //poly_pub.publish(plane_poly);
 
   //cv::Mat rectified_image;
   //cv_bridge::CvImage out_msg;
+
+  std::vector<cv::Point2d> points_image_coords;
+  bool got_image_coords = getImageCoords(points_image_coords,
+                                         cam_info,
+                                         target_frame_,
+                                         pose_object_frame,
+                                         points_object_frame,
+                                         *transformer_,
+                                         allow_pose_off_camera);
+
+  if (!got_image_coords)
+      return false;
   
   cv_bridge::CvImageConstPtr cv_ptr;
   try
@@ -217,7 +329,7 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
   out_msg->header   = image->header;
   out_msg->encoding = cv_ptr->encoding;
 
-  getPerspectiveTransformedImage(points_image_coords_,
+  getPerspectiveTransformedImage(points_image_coords,
                                  cv_ptr->image,
                                  out_msg->image,
                                  target_size_pixels, interpolation_mode, border_mode, border_value);
@@ -235,6 +347,7 @@ RemapWarpProvider::RemapWarpProvider(boost::shared_ptr<tf::Transformer> transfor
 
 bool RemapWarpProvider::generateLookupTable()
 {
+  /*
   transformationMatrix = cv::getPerspectiveTransform(originalCorners, destinationCorners);
     
   // Since the camera won't be moving, let's pregenerate the remap LUT
@@ -276,6 +389,7 @@ bool RemapWarpProvider::generateLookupTable()
   transformation_x.create(sourceFrame.size(), CV_16SC2);
   transformation_y.create(sourceFrame.size(), CV_16UC1);
   cv::convertMaps(map_x, map_y, transformation_x, transformation_y, false);
+  */
     
     
   return true;
