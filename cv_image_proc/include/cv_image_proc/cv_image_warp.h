@@ -100,7 +100,7 @@ public:
                       const geometry_msgs::Pose& pose_object_frame,
                       const std::vector<Eigen::Vector3d>& points_object_frame,
                       const cv::Size& target_size_pixels,
-                      cv_bridge::CvImagePtr cv_ptr,
+                      cv_bridge::CvImagePtr out_msg,
                       const int interpolation_mode=cv::INTER_CUBIC,
                       const int border_mode=cv::BORDER_CONSTANT,
                       const cv::Scalar& border_value=cv::Scalar(),
@@ -119,13 +119,31 @@ public:
   RemapWarpProvider(boost::shared_ptr<tf::Transformer> transformer_in,
                     const std::string target_frame_in = std::string("map"));
   
-  bool generateLookupTable();
+  bool generateLookupTable(const sensor_msgs::CameraInfoConstPtr& cam_info,
+                           const geometry_msgs::Pose& pose_object_frame,
+                           const std::vector<Eigen::Vector3d>& points_object_frame,
+                           const cv::Size& target_size_pixels);
   
-  bool warpImage();
+  bool getWarpedImage(const sensor_msgs::ImageConstPtr& image,
+                      const sensor_msgs::CameraInfoConstPtr& cam_info,
+                      const geometry_msgs::Pose& pose_object_frame,
+                      const std::vector<Eigen::Vector3d>& points_object_frame,
+                      const cv::Size& target_size_pixels,
+                      cv_bridge::CvImagePtr out_msg,
+                      const int interpolation_mode=cv::INTER_CUBIC,
+                      const int border_mode=cv::BORDER_CONSTANT,
+                      const cv::Scalar& border_value=cv::Scalar(),
+                      const bool allow_pose_off_camera = false
+                     );
 
 protected:
   boost::shared_ptr<tf::Transformer> transformer_;
   std::string target_frame_;
+
+  cv::Mat transformation_x_;
+  cv::Mat transformation_y_;
+
+  bool lookup_table_valid_;
     
 };
 

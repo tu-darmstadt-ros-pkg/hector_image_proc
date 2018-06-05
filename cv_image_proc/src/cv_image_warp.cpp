@@ -50,13 +50,9 @@ std::vector<Eigen::Vector3d> getSampleRectangleObjectPoints(double rectangle_siz
   return tmp;
 }
 
-void getPerspectiveTransformedImage(const std::vector<cv::Point2d> points_image_coords_,
-                                    const cv::Mat& source_img,
-                                    cv::Mat& target_img,
-                                    const cv::Size& target_size_pixels,
-                                    const int interpolation_mode,
-                                    const int border_mode,
-                                    const cv::Scalar& border_value)
+bool getPerspectiveTransform(cv::Mat& perspective_transform,
+                        const std::vector<cv::Point2d> points_image_coords,
+                        const cv::Size& target_size_pixels)
 {
   cv::Point2f src[4];
   cv::Point2f dst[4];
@@ -64,7 +60,7 @@ void getPerspectiveTransformedImage(const std::vector<cv::Point2d> points_image_
 
   // Order BOTTOM_LEFT, UPPER_LEFT, UPPER_RIGHT, BOTTOM_RIGHT
   for (size_t i = 0; i < 4; ++i){
-    src[i] = points_image_coords_[i];
+    src[i] = points_image_coords[i];
   }
 
   double aspect_ratio = target_size_pixels.width / target_size_pixels.height;
@@ -77,9 +73,29 @@ void getPerspectiveTransformedImage(const std::vector<cv::Point2d> points_image_
   dst[UPPER_RIGHT]  = cv::Point2f(x_max, y_max);
   dst[BOTTOM_RIGHT] = cv::Point2f(x_max,0.0f);
 
-  cv::Mat M = cv::getPerspectiveTransform(src, dst);
+  perspective_transform = cv::getPerspectiveTransform(src, dst);
+
+  return true;
+
+}
+
+void getPerspectiveTransformedImage(const std::vector<cv::Point2d> points_image_coords_,
+                                    const cv::Mat& source_img,
+                                    cv::Mat& target_img,
+                                    const cv::Size& target_size_pixels,
+                                    const int interpolation_mode,
+                                    const int border_mode,
+                                    const cv::Scalar& border_value)
+{
+
+  cv::Mat perspective_transform;
+
+  getPerspectiveTransform(perspective_transform,
+                          points_image_coords_,
+                          target_size_pixels);
+
   //cv::warpPerspective(source_img, target_img, M, target_size_pixels, CV_INTER_AREA, cv::BORDER_CONSTANT , heatval );
-  cv::warpPerspective(source_img, target_img, M, target_size_pixels, interpolation_mode, border_mode, border_value);
+  cv::warpPerspective(source_img, target_img, perspective_transform, target_size_pixels, interpolation_mode, border_mode, border_value);
 }
 
 bool getImageCoords(std::vector<cv::Point2d>& points_image_coords,
@@ -202,100 +218,6 @@ bool WarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
                                   const bool allow_pose_off_camera
                                  )
 {
-   /*
-  if (points_object_frame.size() != 4)
-  {
-    ROS_ERROR("Need exactly four points in object frame for perspective warp, aborting!");
-    return false;
-  }
-
-  tf::Pose object_pose_world_tf;
-  tf::poseMsgToTF(pose_object_frame, object_pose_world_tf);
-
-  //ROS_INFO_STREAM("\n" << object_pose_world << "\n");
-
-  tf::StampedTransform trans_to_camera_frame;
-  try{
-    transformer_->lookupTransform(image->header.frame_id, target_frame_,
-                                  ros::Time(0), trans_to_camera_frame);
-    //listener->lookupTransform("arm_stereo_left_camera_optical_frame", "world",
-    //                          ros::Time(0), trans_to_camera_frame);
-
-  }
-  catch (tf::TransformException &ex) {
-    ROS_ERROR("Lookup Transform failed: %s",ex.what());
-    return false;
-  }
-
-  tf::Pose object_pose_camera_tf = trans_to_camera_frame * object_pose_world_tf;
-
-  image_geometry::PinholeCameraModel cam_model;
-
-  cam_model.fromCameraInfo(*cam_info);
-
-  cv::Point2d object_camera_pixels = cam_model.project3dToPixel(
-        cv::Point3d(object_pose_camera_tf.getOrigin().getX(),
-                    object_pose_camera_tf.getOrigin().getY(),
-                    object_pose_camera_tf.getOrigin().getZ()));
-
-  if (!allow_pose_off_camera){
-    // Note CV vs standard ROS coords
-    if((object_camera_pixels.x < 0.0) || (object_camera_pixels.x > cam_info->width) ||
-       (object_camera_pixels.y < 0.0) || (object_camera_pixels.y > cam_info->height))
-    {
-      ROS_WARN("Projection outside image. Coords: %f, %f",object_camera_pixels.x, object_camera_pixels.y);
-      return false;
-    }
-  }
-
-  //ROS_INFO("Projection. Coords: %f, %f",object_camera_pixels.x, object_camera_pixels.y);
-
-
-
-  //cv::Mat img = cv_ptr->image;
-
-  //image_pub.publish(cv_ptr);
-
-  Eigen::Affine3d transform_camera_t_world;
-  tf::transformTFToEigen(trans_to_camera_frame, transform_camera_t_world);
-
-  Eigen::Affine3d transform_world_t_object;
-  tf::poseMsgToEigen(pose_object_frame, transform_world_t_object);
-
-  //geometry_msgs::PolygonStamped plane_poly;
-  //plane_poly.header = latest_img_->header;
-  //plane_poly.header.frame_id = "arm_stereo_left_camera_optical_frame";
-
-  //plane_poly.polygon.points.resize(4);
-
-  std::vector<cv::Point2d> points_image_coords_;
-  points_image_coords_.resize(4);
-
-  for (size_t i = 0; i < 4; ++i)
-  {
-
-    Eigen::Vector3d point_cam = transform_camera_t_world *
-        transform_world_t_object *
-        points_object_frame[i];
-
-    points_image_coords_[i] = cam_model.project3dToPixel(
-          cv::Point3d(point_cam.x(), point_cam.y(), point_cam.z()));
-
-
-    //plane_poly.polygon.points[i].x = point_cam.x();
-    //plane_poly.polygon.points[i].y = point_cam.y();
-    //plane_poly.polygon.points[i].z = point_cam.z();
-
-    //std::cout << "\nx: " << object_rectify_plane_points_[i].point_image.x << " y: " <<
-    //            object_rectify_plane_points_[i].point_image.y <<"\n";
-  }
-  */
-
-  //poly_pub.publish(plane_poly);
-
-  //cv::Mat rectified_image;
-  //cv_bridge::CvImage out_msg;
-
   std::vector<cv::Point2d> points_image_coords;
   bool got_image_coords = getImageCoords(points_image_coords,
                                          cam_info,
@@ -341,25 +263,51 @@ RemapWarpProvider::RemapWarpProvider(boost::shared_ptr<tf::Transformer> transfor
                            const std::string target_frame_in)
   : transformer_(transformer_in)
   , target_frame_(target_frame_in)
+  , lookup_table_valid_(false)
 {
 
 }
 
-bool RemapWarpProvider::generateLookupTable()
+bool RemapWarpProvider::generateLookupTable(const sensor_msgs::CameraInfoConstPtr& cam_info,
+                                            const geometry_msgs::Pose& pose_object_frame,
+                                            const std::vector<Eigen::Vector3d>& points_object_frame,
+                                            const cv::Size& target_size_pixels)
 {
-  /*
-  transformationMatrix = cv::getPerspectiveTransform(originalCorners, destinationCorners);
+
+  std::vector<cv::Point2d> points_image_coords;
+  bool got_image_coords = getImageCoords(points_image_coords,
+                                         cam_info,
+                                         target_frame_,
+                                         pose_object_frame,
+                                         points_object_frame,
+                                         *transformer_,
+                                         true);
+
+  if (!got_image_coords)
+      return false;
+
+  cv::Mat perspective_transform;
+
+  getPerspectiveTransform(perspective_transform,
+                          points_image_coords,
+                          target_size_pixels);
+
+  //transformationMatrix = cv::getPerspectiveTransform(originalCorners, destinationCorners);
     
   // Since the camera won't be moving, let's pregenerate the remap LUT
   cv::Mat inverseTransMatrix;
-  cv::invert(transformationMatrix, inverseTransMatrix);
+  cv::invert(perspective_transform, inverseTransMatrix);
     
   // Generate the warp matrix
   cv::Mat map_x, map_y, srcTM;
   srcTM = inverseTransMatrix.clone(); // If WARP_INVERSE, set srcTM to transformationMatrix
+
+  cv::Size sourceFrameSize = cv::Size(cam_info->width, cam_info->height);
+  int sourceFrameCols = cam_info->width;
+  int sourceFrameRows = cam_info->height;
     
-  map_x.create(sourceFrame.size(), CV_32FC1);
-  map_y.create(sourceFrame.size(), CV_32FC1);
+  map_x.create(sourceFrameSize, CV_32FC1);
+  map_y.create(sourceFrameSize, CV_32FC1);
     
   double M11, M12, M13, M21, M22, M23, M31, M32, M33;
   M11 = srcTM.at<double>(0,0);
@@ -372,9 +320,9 @@ bool RemapWarpProvider::generateLookupTable()
   M32 = srcTM.at<double>(2,1);
   M33 = srcTM.at<double>(2,2);
     
-  for (int y = 0; y < sourceFrame.rows; y++) {
+  for (int y = 0; y < sourceFrameRows; y++) {
     double fy = (double)y;
-    for (int x = 0; x < sourceFrame.cols; x++) {
+    for (int x = 0; x < sourceFrameCols; x++) {
       double fx = (double)x;
       double w = ((M31 * fx) + (M32 * fy) + M33);
       w = w != 0.0f ? 1.f / w : 0.0f;
@@ -386,15 +334,57 @@ bool RemapWarpProvider::generateLookupTable()
   }
     
     // This creates a fixed-point representation of the mapping resulting in ~4% CPU savings
-  transformation_x.create(sourceFrame.size(), CV_16SC2);
-  transformation_y.create(sourceFrame.size(), CV_16UC1);
-  cv::convertMaps(map_x, map_y, transformation_x, transformation_y, false);
-  */
-    
+  transformation_x_.create(sourceFrameSize, CV_16SC2);
+  transformation_y_.create(sourceFrameSize, CV_16UC1);
+  cv::convertMaps(map_x, map_y, transformation_x_, transformation_y_, false);
+
+  lookup_table_valid_ = true;
     
   return true;
 }
 
+bool RemapWarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
+                    const sensor_msgs::CameraInfoConstPtr& cam_info,
+                    const geometry_msgs::Pose& pose_object_frame,
+                    const std::vector<Eigen::Vector3d>& points_object_frame,
+                    const cv::Size& target_size_pixels,
+                    cv_bridge::CvImagePtr out_msg,
+                    const int interpolation_mode,
+                    const int border_mode,
+                    const cv::Scalar& border_value,
+                    const bool allow_pose_off_camera
+                   )
+{
+  if (!lookup_table_valid_){
+    generateLookupTable(cam_info,
+                        pose_object_frame,
+                        points_object_frame,
+                        target_size_pixels);
+  }
 
+  cv_bridge::CvImageConstPtr cv_ptr;
+  try
+  {
+        cv_ptr = cv_bridge::toCvShare(image);
+  }
+  catch (cv_bridge::Exception& e)
+  {
+    ROS_ERROR("cv_bridge exception: %s", e.what());
+    return false;
+  }
+
+  out_msg->header   = image->header;
+  out_msg->encoding = cv_ptr->encoding;
+
+  //getPerspectiveTransformedImage(points_image_coords,
+  //                               cv_ptr->image,
+  //                               out_msg->image,
+  //                               target_size_pixels, interpolation_mode, border_mode, border_value);
+
+  cv::remap(cv_ptr->image, out_msg->image, transformation_x_, transformation_y_, interpolation_mode, border_mode, border_value);
+
+  return true;
+
+}
 
 }
