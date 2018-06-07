@@ -283,8 +283,10 @@ bool RemapWarpProvider::generateLookupTable(const sensor_msgs::CameraInfoConstPt
                                          *transformer_,
                                          true);
 
-  if (!got_image_coords)
-      return false;
+  if (!got_image_coords){
+    ROS_ERROR("Failed to retrieve image coords for warping.");
+    return false;
+  }
 
   cv::Mat perspective_transform;
 
@@ -302,10 +304,15 @@ bool RemapWarpProvider::generateLookupTable(const sensor_msgs::CameraInfoConstPt
   cv::Mat map_x, map_y, srcTM;
   srcTM = inverseTransMatrix.clone(); // If WARP_INVERSE, set srcTM to transformationMatrix
 
-  cv::Size sourceFrameSize = cv::Size(cam_info->width, cam_info->height);
-  int sourceFrameCols = cam_info->width;
-  int sourceFrameRows = cam_info->height;
+  //cv::Size sourceFrameSize = cv::Size(cam_info->width, cam_info->height);
+  //int sourceFrameCols = cam_info->width;
+  //int sourceFrameRows = cam_info->height;
     
+  cv::Size sourceFrameSize = target_size_pixels;
+  int sourceFrameCols = target_size_pixels.width;
+  int sourceFrameRows = target_size_pixels.height;
+
+
   map_x.create(sourceFrameSize, CV_32FC1);
   map_y.create(sourceFrameSize, CV_32FC1);
     
@@ -337,8 +344,6 @@ bool RemapWarpProvider::generateLookupTable(const sensor_msgs::CameraInfoConstPt
   transformation_x_.create(sourceFrameSize, CV_16SC2);
   transformation_y_.create(sourceFrameSize, CV_16UC1);
   cv::convertMaps(map_x, map_y, transformation_x_, transformation_y_, false);
-
-  lookup_table_valid_ = true;
     
   return true;
 }
@@ -356,10 +361,14 @@ bool RemapWarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
                    )
 {
   if (!lookup_table_valid_){
-    generateLookupTable(cam_info,
+    if (generateLookupTable(cam_info,
                         pose_object_frame,
                         points_object_frame,
-                        target_size_pixels);
+                        target_size_pixels)){
+      lookup_table_valid_ = true;
+    }else{
+      return false;
+    }
   }
 
   cv_bridge::CvImageConstPtr cv_ptr;
