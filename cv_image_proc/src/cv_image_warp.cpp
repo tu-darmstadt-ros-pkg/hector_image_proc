@@ -119,6 +119,7 @@ bool getImageCoords(std::vector<cv::Point2d>& points_image_coords,
 
   tf::StampedTransform trans_to_camera_frame;
   try{
+    transformer.waitForTransform(cam_info->header.frame_id, target_frame, ros::Time(0), ros::Duration(0.5));
     transformer.lookupTransform(cam_info->header.frame_id, target_frame,
                                   ros::Time(0), trans_to_camera_frame);
     //listener->lookupTransform("arm_stereo_left_camera_optical_frame", "world",
