@@ -143,8 +143,8 @@ protected:
   cv::Mat transformation_x_;
   cv::Mat transformation_y_;
 
-  bool lookup_table_valid_;
-    
+  std::vector<Eigen::Vector3d> points_object_frame_;
+  cv::Size target_size_pixels_;
 };
 
 

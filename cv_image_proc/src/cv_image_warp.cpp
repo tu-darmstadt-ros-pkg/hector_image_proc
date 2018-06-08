@@ -264,7 +264,6 @@ RemapWarpProvider::RemapWarpProvider(boost::shared_ptr<tf::Transformer> transfor
                            const std::string target_frame_in)
   : transformer_(transformer_in)
   , target_frame_(target_frame_in)
-  , lookup_table_valid_(false)
 {
 
 }
@@ -295,8 +294,6 @@ bool RemapWarpProvider::generateLookupTable(const sensor_msgs::CameraInfoConstPt
                           points_image_coords,
                           target_size_pixels);
 
-  //transformationMatrix = cv::getPerspectiveTransform(originalCorners, destinationCorners);
-    
   // Since the camera won't be moving, let's pregenerate the remap LUT
   cv::Mat inverseTransMatrix;
   cv::invert(perspective_transform, inverseTransMatrix);
@@ -305,10 +302,6 @@ bool RemapWarpProvider::generateLookupTable(const sensor_msgs::CameraInfoConstPt
   cv::Mat map_x, map_y, srcTM;
   srcTM = inverseTransMatrix.clone(); // If WARP_INVERSE, set srcTM to transformationMatrix
 
-  //cv::Size sourceFrameSize = cv::Size(cam_info->width, cam_info->height);
-  //int sourceFrameCols = cam_info->width;
-  //int sourceFrameRows = cam_info->height;
-    
   cv::Size sourceFrameSize = target_size_pixels;
   int sourceFrameCols = target_size_pixels.width;
   int sourceFrameRows = target_size_pixels.height;
@@ -341,7 +334,7 @@ bool RemapWarpProvider::generateLookupTable(const sensor_msgs::CameraInfoConstPt
     }
   }
     
-    // This creates a fixed-point representation of the mapping resulting in ~4% CPU savings
+  // Create a fixed-point representation of the mapping
   transformation_x_.create(sourceFrameSize, CV_16SC2);
   transformation_y_.create(sourceFrameSize, CV_16UC1);
   cv::convertMaps(map_x, map_y, transformation_x_, transformation_y_, false);
@@ -361,12 +354,15 @@ bool RemapWarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
                     const bool allow_pose_off_camera
                    )
 {
-  if (!lookup_table_valid_){
+  if ((points_object_frame_ != points_object_frame) ||
+      (target_size_pixels_ != target_size_pixels)){
+    ROS_INFO("[RemapWarpProvider] Generating warp remap lookup table.");
     if (generateLookupTable(cam_info,
                         pose_object_frame,
                         points_object_frame,
                         target_size_pixels)){
-      lookup_table_valid_ = true;
+      points_object_frame_ = points_object_frame;
+      target_size_pixels_  = target_size_pixels;
     }else{
       return false;
     }
@@ -375,7 +371,7 @@ bool RemapWarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
   cv_bridge::CvImageConstPtr cv_ptr;
   try
   {
-        cv_ptr = cv_bridge::toCvShare(image);
+    cv_ptr = cv_bridge::toCvShare(image);
   }
   catch (cv_bridge::Exception& e)
   {
@@ -386,12 +382,13 @@ bool RemapWarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
   out_msg->header   = image->header;
   out_msg->encoding = cv_ptr->encoding;
 
-  //getPerspectiveTransformedImage(points_image_coords,
-  //                               cv_ptr->image,
-  //                               out_msg->image,
-  //                               target_size_pixels, interpolation_mode, border_mode, border_value);
-
-  cv::remap(cv_ptr->image, out_msg->image, transformation_x_, transformation_y_, interpolation_mode, border_mode, border_value);
+  cv::remap(cv_ptr->image,
+            out_msg->image,
+            transformation_x_,
+            transformation_y_,
+            interpolation_mode,
+            border_mode,
+            border_value);
 
   return true;
 
