@@ -21,14 +21,20 @@ include_directories(
 )
 catkin_package(
    INCLUDE_DIRS include
-   LIBRARIES cv_debug_provider
+   LIBRARIES ${PROJECT_NAME}
    CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs
    #DEPENDS system_lib
 )
 
-
-add_library(cv_debug_provider src/cv_debug_provider.cpp)
-target_link_libraries(cv_debug_provider
+add_library(${PROJECT_NAME} src/cv_debug_provider.cpp)
+target_link_libraries(${PROJECT_NAME}
    ${catkin_LIBRARIES}
    ${OpenCV_LIBRARIES}
 )
+
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})

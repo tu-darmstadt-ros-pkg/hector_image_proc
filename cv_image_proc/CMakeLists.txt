@@ -35,7 +35,9 @@ target_link_libraries(cv_line_tools ${catkin_LIBRARIES})
 add_library(cv_pca src/cv_pca.cpp)
 target_link_libraries(cv_pca ${catkin_LIBRARIES})
 
-install(TARGETS cv_image_warp cv_line_tools
+install(TARGETS cv_image_warp cv_line_tools cv_pca
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
