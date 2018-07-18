@@ -71,7 +71,7 @@ public:
     * This should be called at the end of image processing
     * operations.
     */
-  void publishDebugImage();
+  void publishDebugImage(bool concat_vertical = false);
 
   /**
    * True if there is a subscriber to the debug image

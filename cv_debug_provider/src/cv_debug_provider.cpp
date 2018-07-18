@@ -50,7 +50,7 @@ bool CvDebugProvider::addDebugImage(const cv::Mat& img)
   return true;
 }
 
-void CvDebugProvider::publishDebugImage()
+void CvDebugProvider::publishDebugImage(bool concat_vertical)
 {
   if (image_pub_.getNumSubscribers() > 0)
   {
@@ -59,7 +59,11 @@ void CvDebugProvider::publishDebugImage()
     out_msg.header.frame_id = "only_for_debugging_no_valid_frame_id";
     out_msg.encoding = encoding_;
 
-    cv::hconcat(debug_img_vector_, out_msg.image);
+    if (!concat_vertical){
+      cv::hconcat(debug_img_vector_, out_msg.image);
+    }else{
+      cv::vconcat(debug_img_vector_, out_msg.image);
+    }
 
     image_pub_.publish(out_msg.toImageMsg());
 
