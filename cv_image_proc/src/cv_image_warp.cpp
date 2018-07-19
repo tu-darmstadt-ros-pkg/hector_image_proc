@@ -50,7 +50,7 @@ std::vector<Eigen::Vector3d> getSampleRectangleObjectPoints(double rectangle_siz
   return tmp;
 }
 
-bool getPerspectiveTransform(cv::Mat& perspective_transform,
+bool generatePerspectiveTransform(cv::Mat& perspective_transform,
                         const std::vector<cv::Point2d> points_image_coords,
                         const cv::Size& target_size_pixels)
 {
@@ -90,7 +90,7 @@ void getPerspectiveTransformedImage(const std::vector<cv::Point2d> points_image_
 
   cv::Mat perspective_transform;
 
-  getPerspectiveTransform(perspective_transform,
+  generatePerspectiveTransform(perspective_transform,
                           points_image_coords_,
                           target_size_pixels);
 
@@ -288,19 +288,17 @@ bool RemapWarpProvider::generateLookupTable(const sensor_msgs::CameraInfoConstPt
     return false;
   }
 
-  cv::Mat perspective_transform;
-
-  getPerspectiveTransform(perspective_transform,
+  generatePerspectiveTransform(perspective_transform_,
                           points_image_coords,
                           target_size_pixels);
 
+  cv::invert(perspective_transform_, inverse_perspective_transform_);
+
   // Since the camera won't be moving, let's pregenerate the remap LUT
-  cv::Mat inverseTransMatrix;
-  cv::invert(perspective_transform, inverseTransMatrix);
     
   // Generate the warp matrix
   cv::Mat map_x, map_y, srcTM;
-  srcTM = inverseTransMatrix.clone(); // If WARP_INVERSE, set srcTM to transformationMatrix
+  srcTM = inverse_perspective_transform_.clone(); // If WARP_INVERSE, set srcTM to transformationMatrix
 
   cv::Size sourceFrameSize = target_size_pixels;
   int sourceFrameCols = target_size_pixels.width;
@@ -392,6 +390,16 @@ bool RemapWarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
 
   return true;
 
+}
+
+const cv::Mat& RemapWarpProvider::getPerspectiveTransform() const
+{
+  return perspective_transform_;
+}
+
+const cv::Mat& RemapWarpProvider::getInversePerspectiveTransform() const
+{
+  return inverse_perspective_transform_;
 }
 
 }

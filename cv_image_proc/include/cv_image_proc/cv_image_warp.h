@@ -136,12 +136,18 @@ public:
                       const bool allow_pose_off_camera = false
                      );
 
+  const cv::Mat& getPerspectiveTransform() const;
+  const cv::Mat& getInversePerspectiveTransform() const;
+
 protected:
   boost::shared_ptr<tf::Transformer> transformer_;
   std::string target_frame_;
 
   cv::Mat transformation_x_;
   cv::Mat transformation_y_;
+
+  cv::Mat perspective_transform_;
+  cv::Mat inverse_perspective_transform_;
 
   std::vector<Eigen::Vector3d> points_object_frame_;
   cv::Size target_size_pixels_;
