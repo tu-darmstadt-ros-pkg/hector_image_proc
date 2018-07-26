@@ -23,7 +23,7 @@ bool CvDebugProvider::addDebugImage(const cv::Mat& img)
       cv::cvtColor(img, converted_image, CV_GRAY2BGR);
       debug_img_vector_.push_back(converted_image);
     }else if (img.type() == CV_8UC3){
-      debug_img_vector_.push_back(img);
+      debug_img_vector_.push_back(img.clone());
     }else if (img.type() == CV_32FC1){
       cv::Mat debug_out_depth_UC8;
 
