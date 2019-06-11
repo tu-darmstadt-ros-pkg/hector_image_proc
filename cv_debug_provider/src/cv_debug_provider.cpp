@@ -42,6 +42,19 @@ bool CvDebugProvider::addDebugImage(const cv::Mat& img)
       cv::Mat converted_image;
       cv::cvtColor(img, converted_image, CV_BGRA2BGR);
       debug_img_vector_.push_back(converted_image);
+    }else if (img.type() == CV_32SC1){
+      cv::Mat debug_out_depth_UC8;
+
+      //@TODO: Be more clever about finding max and min
+      double max_val = 1.0;
+      double min_val = 0.0;
+      const double alpha = 255.0 / (max_val - min_val);
+      const double beta = -alpha * min_val;
+      img.convertTo(debug_out_depth_UC8, CV_8UC1, 255, 0);
+
+      cv::Mat converted_image;
+      cv::cvtColor(debug_out_depth_UC8, converted_image, CV_GRAY2BGR);
+      debug_img_vector_.push_back(converted_image);
     }else{
       ROS_ERROR("Unknown image encoding: %d", img.type());
     }
