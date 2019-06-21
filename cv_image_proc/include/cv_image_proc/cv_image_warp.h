@@ -133,8 +133,8 @@ public:
                       const int interpolation_mode=cv::INTER_CUBIC,
                       const int border_mode=cv::BORDER_CONSTANT,
                       const cv::Scalar& border_value=cv::Scalar(),
-                      const bool allow_pose_off_camera = false
-                     );
+                      const bool allow_pose_off_camera = false,
+                      cv::Mat *mask_img = 0);
 
   const cv::Mat& getPerspectiveTransform() const;
   const cv::Mat& getInversePerspectiveTransform() const;

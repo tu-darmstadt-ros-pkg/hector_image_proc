@@ -349,7 +349,8 @@ bool RemapWarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
                     const int interpolation_mode,
                     const int border_mode,
                     const cv::Scalar& border_value,
-                    const bool allow_pose_off_camera
+                    const bool allow_pose_off_camera,
+                    cv::Mat* mask_img
                    )
 {
   if ((points_object_frame_ != points_object_frame) ||
@@ -361,6 +362,18 @@ bool RemapWarpProvider::getWarpedImage(const sensor_msgs::ImageConstPtr& image,
                         target_size_pixels)){
       points_object_frame_ = points_object_frame;
       target_size_pixels_  = target_size_pixels;
+
+      if (mask_img != 0){
+        // Transform completely white image to obtain mask
+        cv::remap(cv::Mat(cv::Size(image->width, image->height), CV_8UC1, 255),
+                  *mask_img,
+                  transformation_x_,
+                  transformation_y_,
+                  interpolation_mode,
+                  border_mode,
+                  border_value);
+
+      }
     }else{
       return false;
     }
