@@ -43,14 +43,14 @@ void drawAxis(cv::Mat& img, cv::Point p, cv::Point q, cv::Scalar colour, const f
     // Here we lengthen the arrow by a factor of scale
     q.x = (int) (p.x - scale * hypotenuse * cos(angle));
     q.y = (int) (p.y - scale * hypotenuse * sin(angle));
-    cv::line(img, p, q, colour, 1, CV_AA);
+    cv::line(img, p, q, colour, 1, cv::LINE_AA);
     // create the arrow hooks
     p.x = (int) (q.x + 9 * cos(angle + CV_PI / 4));
     p.y = (int) (q.y + 9 * sin(angle + CV_PI / 4));
-    cv::line(img, p, q, colour, 1, CV_AA);
+    cv::line(img, p, q, colour, 1, cv::LINE_AA);
     p.x = (int) (q.x + 9 * cos(angle - CV_PI / 4));
     p.y = (int) (q.y + 9 * sin(angle - CV_PI / 4));
-    cv::line(img, p, q, colour, 1, CV_AA);
+    cv::line(img, p, q, colour, 1, cv::LINE_AA);
 }
 
 double getOrientation(const std::vector<cv::Point> &pts, cv::Mat &img)
@@ -64,7 +64,7 @@ double getOrientation(const std::vector<cv::Point> &pts, cv::Mat &img)
         data_pts.at<double>(i, 1) = pts[i].y;
     }
     //Perform PCA analysis
-    cv::PCA pca_analysis(data_pts, cv::Mat(), CV_PCA_DATA_AS_ROW);
+    cv::PCA pca_analysis(data_pts, cv::Mat(), cv::PCA::DATA_AS_ROW);
     //Store the center of the object
     cv::Point cntr = cv::Point(static_cast<int>(pca_analysis.mean.at<double>(0, 0)),
                       static_cast<int>(pca_analysis.mean.at<double>(0, 1)));
