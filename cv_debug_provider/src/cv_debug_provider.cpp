@@ -37,6 +37,19 @@ bool CvDebugProvider::addDebugImage(const cv::Mat& img)
       cv::Mat converted_image;
       cv::cvtColor(debug_out_depth_UC8, converted_image, CV_GRAY2BGR);
       debug_img_vector_.push_back(converted_image);
+    }else if (img.type() == CV_32FC3){
+      cv::Mat debug_out_depth_UC8;
+
+      //@TODO: Be more clever about finding max and min
+      double max_val = 1.0;
+      double min_val = 0.0;
+      const double alpha = 255.0 / (max_val - min_val);
+      const double beta = -alpha * min_val;
+
+      cv::Mat converted_image;
+      img.convertTo(converted_image, CV_8UC3, alpha, beta);
+
+      debug_img_vector_.push_back(converted_image);
     }else if (img.type() == CV_8UC4){
       //ROS_ERROR("Type CV_8UC4");
       cv::Mat converted_image;
