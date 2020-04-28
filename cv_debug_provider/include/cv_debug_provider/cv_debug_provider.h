@@ -61,7 +61,7 @@ public:
    * Adds a debug image if there are subscribers.
    * In case of no subscribers, does not add image.
    * @param img The image to be added
-   * @return Indicated success or failure of adding
+   * @return Indicates success or failure of adding
    */
   bool addDebugImage(const cv::Mat& img);
 
