@@ -29,7 +29,7 @@
 #ifndef CV_LINE_TOOLS_H___
 #define CV_LINE_TOOLS_H___
 
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include <sensor_msgs/Image.h>

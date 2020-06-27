@@ -29,7 +29,7 @@
 #ifndef CV_PCA_H___
 #define CV_PCA_H___
 
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 // From
