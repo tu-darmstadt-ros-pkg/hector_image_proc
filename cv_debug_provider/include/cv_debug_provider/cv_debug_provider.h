@@ -87,6 +87,11 @@ public:
    */
   cv::Mat& getLastAddedImage();
 
+  /**
+   * Flips the debug image vector in-place
+   */
+  void flip_image_vector();
+
 protected:
 
   boost::shared_ptr<image_transport::ImageTransport> it_out_;

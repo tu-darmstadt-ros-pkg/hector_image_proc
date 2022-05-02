@@ -108,3 +108,8 @@ cv::Mat& CvDebugProvider::getLastAddedImage()
   size_t size = debug_img_vector_.size();
   return debug_img_vector_[size-1];
 }
+
+void CvDebugProvider::flip_image_vector()
+{
+  std::reverse(debug_img_vector_.begin(), debug_img_vector_.end());
+}
